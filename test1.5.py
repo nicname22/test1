@@ -132,35 +132,15 @@ note_range = 0.4 # Detect notes based on amplitude threshold
 # note_range = 0.4
 
 def normalizeNote(note):
-    return note
+    return note[:-1]
 
+# Find the closest musical note for a given frequency
 def getNote(frequency):
-    global notes
-    for noteIndex in range(0, len(notes)):
-        noteData = notes[noteIndex]
-        upperBoundFrequency = noteData[1] * 1.015
-        lowerBoundFrequency = noteData[1] * 0.986
-        if lowerBoundFrequency <= frequency <= upperBoundFrequency:
+    for noteData in notes:
+        noteFreq = noteData[1]
+        if noteFreq * 0.986 <= frequency <= noteFreq * 1.015:
             return noteData[0]  # Return note and octave
     return ''
-
-    plt.subplot(411)
-    plt.plot(timeVector, signal, "g")
-    plt.xlabel('Time')
-    plt.ylabel('Amplitude')
-    plt.subplot(412)
-    plt.plot(fftFrequencies, fft, "r")
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Count dbl-sided')
-    plt.subplot(413)
-    plt.plot(x, y, "b")
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Count single-sided')
-    plt.subplot(414)
-    plt.plot(x, yRealValues, "b")
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Count single-sided')
-    plt.show()
 
 def detect_in_chunks(wav_file):
     fileSampleRate, signal = wavfile.read(wav_file)
@@ -168,13 +148,11 @@ def detect_in_chunks(wav_file):
     # Convert stereo to mono if necessary
     if len(signal.shape) == 2:
         signal = signal.sum(axis=1) / 2
-    
+        
     N = signal.shape[0]  # Total number of samples
-    seconds = N / float(fileSampleRate)
-    
-    samples_per_chunk = int(fileSampleRate * chunk_duration)  # Number of samples per second
-
-    # Split the signal into 1-second chunks
+    samples_per_chunk = int(fileSampleRate * chunk_duration)
+    global_notes_sequence = []  # To store all notes across chunks
+    # Split the signal into chunks
     for start_sample in range(0, N, samples_per_chunk):
         end_sample = start_sample + samples_per_chunk
         if end_sample > N:
@@ -182,51 +160,33 @@ def detect_in_chunks(wav_file):
 
         chunk_signal = signal[start_sample:end_sample]
 
-        # Create a time vector for the chunk
-        timeVector = np.linspace(start_sample/fileSampleRate, end_sample/fileSampleRate, len(chunk_signal), endpoint=False)
-
         # Perform FFT on the chunk
         fft = abs(scipy.fft.fft(chunk_signal))
         fftOneSide = fft[:len(fft)//2]
         fftFrequencies = scipy.fftpack.fftfreq(len(chunk_signal), d=1.0/fileSampleRate)
         fftFrequenciesOneSide = fftFrequencies[:len(fft)//2]
 
-        realAbsoluteValues = abs(fftOneSide)
         normalizedAbsoluteValues = abs(fftOneSide) / np.linalg.norm(abs(fftOneSide))
 
-        x = []
-        y = []
-        yRealValues = []
-        noteSequence = []
-
-        # print(f"Analyzing chunk from {start_sample/fileSampleRate:.2f}s to {end_sample/fileSampleRate:.2f}s")
-
+        detected_notes = []
+        # Analyze frequencies in the chunk
         for frequencyIndex in range(0, len(fftFrequenciesOneSide)):
-            if 110 <= fftFrequenciesOneSide[frequencyIndex] <= 8200:  # Focus on musical note range
-                x.append(fftFrequenciesOneSide[frequencyIndex])
-                y.append(normalizedAbsoluteValues[frequencyIndex])
-                yRealValues.append(realAbsoluteValues[frequencyIndex])
-
-                # Detect notes based on amplitude threshold
+            if 110 <= fftFrequenciesOneSide[frequencyIndex] <= 8200:  # Focus on musical range
                 if normalizedAbsoluteValues[frequencyIndex] > note_range:
                     note = getNote(fftFrequenciesOneSide[frequencyIndex])
                     if note:
-                        generalizedNote = normalizeNote(note)
-                        noteSequence.append(generalizedNote)
+                        normalized_note = normalizeNote(note)
+                        detected_notes.append(normalized_note)
 
-        # Print detected notes in this chunk
-        if noteSequence:
-            print(f"Detected notes in sequence: {', '.join(noteSequence)}")
-        else:
-            print("No notes detected in this chunk.")
+        # If notes were detected in chunk, merge
+        if detected_notes:
+            merged_notes = set(detected_notes)  # Remove duplicates within the chunk
+            for note in merged_notes:
+                if not global_notes_sequence or global_notes_sequence[-1] != note:
+                    global_notes_sequence.append(note)
 
-        # Optionally display the plots for each chunk
+    # Output the simplified sequence of detected notes
+    print("Final merged notes sequence:", ', '.join(global_notes_sequence))
 
 # Example usage
 detect_in_chunks("GFTest1.wav")
-# detect_in_chunks("megtest.wav")
-
-
-# bibliography
-# https://github.com/jeffheaton/present/blob/master/youtube/video/fft-frequency.ipynb
-# https://github.com/mrqc/primitive-music-notes-detector/blob/main/pitch-det.py
