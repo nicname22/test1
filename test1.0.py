@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import scipy.io.wavfile as wavfile
 import scipy.fftpack
 
-WAVE_OUTPUT_FILENAME = "C:GFTest.wav"
+WAVE_OUTPUT_FILENAME = "C:file.wav"
 
 notes = [
     ['C0', 16.35, []],
