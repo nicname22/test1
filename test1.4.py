@@ -134,7 +134,16 @@ note_range = 0.4 # Detect notes based on amplitude threshold
 # lower chunk_duration makes it eiser to tell when a note starts 
 # and ends but then pushes the latter part of the note into the next chunk 
 # causeing it to still not able to seperate the notes 
-# only identify at the end of the chunk 
+# only identify at the end of the chunk
+
+#I'm also hopeing if possible for the ai, 
+# to be able to time the spaces in between note 
+# for example when it says "No notes detected in this chunk.",
+# in the fine product it will say "1 tick delay" 
+# with the 1 being interchangeable with 
+# however many times it detect no notes for half a second. 
+# or as close to this feture as possibe
+
 
 def normalizeNote(note):
     return note
@@ -231,6 +240,7 @@ def detect_in_chunks(wav_file):
 
 # Example usage
 detect_in_chunks("GFTest1.wav")
+# detect_in_chunks("megtest.wav")
 
 
 # bibliography
