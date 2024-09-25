@@ -131,6 +131,11 @@ note_range = 0.4 # Detect notes based on amplitude threshold
 # chunk_duration = 0.05
 # note_range = 0.4
 
+# lower chunk_duration makes it eiser to tell when a note starts 
+# and ends but then pushes the latter part of the note into the next chunk 
+# causeing it to still not able to seperate the notes 
+# only identify at the end of the chunk 
+
 def normalizeNote(note):
     return note
 
@@ -175,7 +180,7 @@ def detect_in_chunks(wav_file):
     
     samples_per_chunk = int(fileSampleRate * chunk_duration)  # Number of samples per second
 
-    # Split the signal into 1-second chunks
+    # Split the signal into chunks
     for start_sample in range(0, N, samples_per_chunk):
         end_sample = start_sample + samples_per_chunk
         if end_sample > N:
@@ -226,7 +231,6 @@ def detect_in_chunks(wav_file):
 
 # Example usage
 detect_in_chunks("GFTest1.wav")
-# detect_in_chunks("megtest.wav")
 
 
 # bibliography
