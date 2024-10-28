@@ -136,14 +136,6 @@ note_range = 0.4 # Detect notes based on amplitude threshold
 # causeing it to still not able to seperate the notes 
 # only identify at the end of the chunk
 
-#I'm also hopeing if possible for the ai, 
-# to be able to time the spaces in between note 
-# for example when it says "No notes detected in this chunk.",
-# in the fine product it will say "1 tick delay" 
-# with the 1 being interchangeable with 
-# however many times it detect no notes for half a second. 
-# or as close to this feture as possibe
-
 
 def normalizeNote(note):
     return note
